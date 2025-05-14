@@ -1,0 +1,25 @@
+{
+  "name": "kjv-syntax",
+  "displayName": "King James Version",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "kjv",
+      "aliases": ["King James Version", "kjv"],
+      "extensions": [".kjv"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "kjv",
+      "scopeName": "source.kjv",
+      "path": "./syntaxes/kjv.tmLanguage.json"
+    }]
+  }
+}

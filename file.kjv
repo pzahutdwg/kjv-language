@@ -6,3 +6,5 @@ doth add(a, b) {
 }
 
 hark add(x, y)
+
+Unexpected error here!

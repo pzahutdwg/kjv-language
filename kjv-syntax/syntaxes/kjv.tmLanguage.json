@@ -1,0 +1,32 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "King James Version",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.kjv",
+				"match": "\\b(if|while|for|exalt)\\b"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.kjv",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.kjv",
+					"match": "\\\\."
+				}
+			]
+		}
+	},
+	"scopeName": "source.kjv"
+}

@@ -11,6 +11,7 @@ King James Version programming language (Run with Python)
 - '-' > without
 
 ### Important notes
+---
 Variables must be defined with a word, like "let", "var", "const", etc.
 ---
 Blocks are inside of curly braces. For example:
@@ -22,4 +23,4 @@ if (condition) {
 ---
 Statements like "print" and "if" do not need parentheses, but functions do (for parameters).
 ---
-\# for comments
+'#' for comments

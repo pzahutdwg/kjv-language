@@ -1,0 +1,8 @@
+bid x be 10
+eternal y be 11
+
+doth add(a, b) {
+    exalt a with b
+}
+
+hark add(x, y)

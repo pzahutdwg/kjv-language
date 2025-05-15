@@ -1,10 +1,11 @@
 bid x be 10
 eternal y be 11
+bid z be 5
 
-doth add(a, b) {
+doth add(a, b, c) {
     exalt a with b
 }
 
-hark add(x, y)
+hark add(x, y, z)
 
 Unexpected error here!

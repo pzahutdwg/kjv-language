@@ -10,6 +10,8 @@ def error(line=None, wholeLine=None, type=None, term=None):
         pass
     elif type == 'unexpected':
         print(f'And it came to pass that the term, even {term}, was found in the midst of the code—known to the learned, yet out of season and without cause.')
+    elif type == 'badComma':
+        print(f'At line {line}, a comma did appear, yet it belonged not; for another parameter was looked for, and the comma was found wanting.')
     elif line:
         print(f'Lo, at line {line}, there arose an error, sudden and without warning.')
     
@@ -19,9 +21,15 @@ def error(line=None, wholeLine=None, type=None, term=None):
         print('We have searched the lines and beheld them with care, but the source remaineth in darkness.')
     if term:
         print(term)
+    print('vars')
+    for var in vars:
+        print(var.type, var.name, '=', var.value)
+    print('funcs')
+    for func in funcs:
+        print(func.name, func.params, func.script)
     exit(1)
 
-def doStuff(term, line):
+def declare(term, line):
     global declaring
     global newDec
     if term in declares:
@@ -41,7 +49,7 @@ class Variable():
         self.name = name
         
 class Function():
-    def __init__(self, line=0, name=0, params=0, script=0):
+    def __init__(self, line=0, name=0, params=[], script=0):
         self.type = 'function'
         self.line = line
         self.name = name
@@ -56,6 +64,8 @@ onLine = 0
 
 def run(code):
     assigning = False
+    addParams = False
+    nextParam = False
     global newDec
     global declaring
     global onLine
@@ -69,6 +79,7 @@ def run(code):
         newDec = 0
         declaring = False
         assigning = False
+        codeToFunc = False
         onLine = onLine + 1
         for char in newChars:
             line = line.replace(char, f' {char} ')
@@ -81,7 +92,7 @@ def run(code):
                     skip = 1
                     continue
                 if term in terms and declaring == False:
-                    doStuff(term, onLine)
+                    declare(term, onLine)
                 elif term == 'be' and newDec.type != 'function':
                     assigning = True
                 elif declaring:
@@ -89,7 +100,25 @@ def run(code):
                         newDec.name = term
                     else:
                         if newDec.type == 'function':
-                            pass
+                            if term == '(':
+                                addParams = True
+                                nextParam = True
+                            elif term == ')':
+                                if not nextParam:
+                                    addParams = False
+                                    nextParam = False
+                                else:
+                                    error(onLine, line, 'badComma')
+                            elif term ==',':
+                                nextParam = True
+                            elif term == '{':
+                                if not nextParam:
+                                    pass
+                                else:
+                                    error(onLine, line , 'badComma')
+                            elif term not in terms and addParams and nextParam:
+                                nextParam = False
+                                newDec.params.append(term)
                         elif assigning:
                             newDec.value = term
                         else:

@@ -1,33 +1,76 @@
 import error as err
-
+def quit(status, line=None, wholeLine=None, type=None, term=None):
+    if status == 1:
+        err.error(line, wholeLine, type, term)
+        
+    print('Variables:')
+    for var in vars:
+        print(f'(Declared on line {var.line}) - {var.type} {var.name} = {var.value} (eternal: {var.eternal})')
+    print('Functions:')
+    for func in funcs:
+        print(f'(Declared on line {func.line}) - {func.name}({", ".join(func.params)})')
+        for line in func.script:
+            print(f'  {' '.join(line)}')
+    
+    exit(status)
 ignore = ['#', ';']
 newChars = ['(', ')', '{', '}', ',', '#', '\'', '"']
 vars = []
 funcs = []
-terms = ['bid', 'exalt', 'hark', 'be', 'eternal', 'doth', 'with', 'without']
-declares = ['bid', 'eternal', 'doth']
+terms = ['measure', 'exalt', 'hark', 'be', 'eternal', 'doth', 'with', 'without']
+declares = ['measure', 'eternal', 'doth', 'utterance']
 
 def declare(term, line):
     global declaring
     global newDec
     if term in declares:
         if declaring:
-            err.error(line, None, 'unexpected', term)
+            quit(1, line, None, 'unexpected', term)
         else:
             declaring = True
             if term == 'doth':
                 newDec = Function(line)
-            else:
+            elif term != 'eternal':
                 newDec = Variable(line, term)
+            else:
+                newDec = Variable(line, None, None, None, True)
+
+def printVal(line):
+    global skip
+    skip = 1
+    val = ''
+    string = False
+    for term in line:
+        if term == 'hark':
+            continue
+        if not string:
+            if term == '"':
+                string = True
+                continue
+            else:
+                for func in funcs:
+                    if term == func.name:
+                        val = val + func.runScript()
+                        break
+        else:
+            if term == '"':
+                string = False
+                continue
+            else:
+                val = val + ' ' + str(term)
+            
+    print(val)
 
 class Variable():
-    def __init__(self, line=0, type=0, name=0, value=None):
+    def __init__(self, line=None, type=None, name=None, value=None, eternal=False):
         self.line = line
         self.type = type
         self.name = name
+        self.value = value
+        self.eternal = eternal
         
 class Function():
-    def __init__(self, line=0, name=0, params=[], script=[]):
+    def __init__(self, line=None, name=None, params=[], script=[]):
         self.type = 'function'
         self.line = line
         self.name = name
@@ -35,7 +78,7 @@ class Function():
         self.script = script
         
     def runScript(self):
-        pass
+        print(self.name, 'running.')
     
 newDec = Variable()
 
@@ -53,6 +96,7 @@ def run(code):
     codeToFunc = False
     global printing
     printing = False
+    global skip
     skip = 0
     for line in code:
         if newDec and not codeToFunc:
@@ -72,7 +116,7 @@ def run(code):
             if not '}' in line:
                 newDec.script.append(line)
             elif len(line) > 1:
-                err.error(onLine, line, 'badClose')
+                quit(1, onLine, line, 'badClose')
             else:
                 codeToFunc = False
         for term in line:
@@ -87,6 +131,8 @@ def run(code):
                 elif declaring:
                     if not newDec.name and not term in terms:
                         newDec.name = term
+                    elif not newDec.type and term in declares and not term == 'eternal':
+                        newDec.type = term
                     else:
                         if newDec.type == 'function':
                             if not codeToFunc:
@@ -98,31 +144,30 @@ def run(code):
                                         addParams = False
                                         nextParam = False
                                     else:
-                                        err.error(onLine, line, 'badComma')
+                                        quit(1, onLine, line, 'badComma')
                                 elif term ==',':
                                     nextParam = True
                                 elif term == '{':
                                     if not nextParam:
                                         codeToFunc = True
                                     else:
-                                        err.error(onLine, line , 'badComma')
+                                        quit(1, onLine, line , 'badComma')
                                 elif term not in terms and addParams and nextParam:
                                     nextParam = False
                                     newDec.params.append(term)
                         elif assigning:
-                            newDec.value = term
+                            if newDec.type != 'utterance':
+                                newDec.value = term
+                            else:
+                                if newDec.value:
+                                    newDec.value = str(newDec.value) + ' ' + str(term)
+                                else:
+                                    newDec.value = term
                         else:
-                            err.error(onLine, line, 'declaration')
+                            quit(1, onLine, line, 'declaration')
                 elif term == 'hark':
                     printing = True
+                    printVal(line)
                 else:
-                    err.error(onLine, line, 'notDefined', term)
-
-    print('Variables:')
-    for var in vars:
-        print(f'(Declared on line {var.line}) - {var.type} {var.name} = {var.value}')
-    print('Functions:')
-    for func in funcs:
-        print(f'(Declared on line {func.line}) - {func.name}({", ".join(func.params)})')
-        for line in func.script:
-            print(f'  {line}')
+                    quit(1, onLine, line, 'notDefined', term)
+            

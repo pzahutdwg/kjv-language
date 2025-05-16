@@ -1,12 +1,14 @@
-bid x be 10
-eternal y be 11
-bid z be 5
+measure x be 10
+eternal measure y be 11
+measure z be 5
+utterance scrolls be I love Devin!
 
 doth add(a, b, c) {
-    hark "Thy code worketh!"
+    hark "Thy code still worketh!"
     exalt a with b with c
 }
 
+hark "Thy code worketh!"
 hark add(x, y, z)
 
 Unexpected error here!

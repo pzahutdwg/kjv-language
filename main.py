@@ -23,6 +23,5 @@ while ans != 'y':
         ans = 'n'
 
 text = text.split('\n')
-print(text)
 
 r.run(text)

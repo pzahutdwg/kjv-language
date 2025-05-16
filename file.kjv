@@ -3,7 +3,8 @@ eternal y be 11
 bid z be 5
 
 doth add(a, b, c) {
-    exalt a with b
+    hark "Thy code worketh!"
+    exalt a with b with c
 }
 
 hark add(x, y, z)

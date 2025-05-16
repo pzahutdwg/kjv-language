@@ -1,40 +1,18 @@
+import error as err
+
 ignore = ['#', ';']
-newChars = ['(', ')', '{', '}', ',', '#']
+newChars = ['(', ')', '{', '}', ',', '#', '\'', '"']
 vars = []
 funcs = []
 terms = ['bid', 'exalt', 'hark', 'be', 'eternal', 'doth', 'with', 'without']
 declares = ['bid', 'eternal', 'doth']
-newDec = 0
-def error(line=None, wholeLine=None, type=None, term=None):
-    if type == 'declaration':
-        pass
-    elif type == 'unexpected':
-        print(f'And it came to pass that the term, even {term}, was found in the midst of the code—known to the learned, yet out of season and without cause.')
-    elif type == 'badComma':
-        print(f'At line {line}, a comma did appear, yet it belonged not; for another parameter was looked for, and the comma was found wanting.')
-    elif line:
-        print(f'Lo, at line {line}, there arose an error, sudden and without warning.')
-    
-    if wholeLine:
-        print(' '.join(wholeLine))
-    else:
-        print('We have searched the lines and beheld them with care, but the source remaineth in darkness.')
-    if term:
-        print(term)
-    print('vars')
-    for var in vars:
-        print(var.type, var.name, '=', var.value)
-    print('funcs')
-    for func in funcs:
-        print(func.name, func.params, func.script)
-    exit(1)
 
 def declare(term, line):
     global declaring
     global newDec
     if term in declares:
         if declaring:
-            error(line, None, 'unexpected', term)
+            err.error(line, None, 'unexpected', term)
         else:
             declaring = True
             if term == 'doth':
@@ -49,7 +27,7 @@ class Variable():
         self.name = name
         
 class Function():
-    def __init__(self, line=0, name=0, params=[], script=0):
+    def __init__(self, line=0, name=0, params=[], script=[]):
         self.type = 'function'
         self.line = line
         self.name = name
@@ -58,6 +36,8 @@ class Function():
         
     def runScript(self):
         pass
+    
+newDec = Variable()
 
 declaring = False
 onLine = 0
@@ -69,29 +49,38 @@ def run(code):
     global newDec
     global declaring
     global onLine
+    global codeToFunc
+    codeToFunc = False
+    global printing
+    printing = False
     skip = 0
     for line in code:
-        if newDec:
+        if newDec and not codeToFunc:
             if newDec.type == 'function':
                 funcs.append(newDec)
             elif newDec.type:
                 vars.append(newDec)
-        newDec = 0
-        declaring = False
+        if not codeToFunc:
+            declaring = False
+            newDec = 0
         assigning = False
-        codeToFunc = False
         onLine = onLine + 1
         for char in newChars:
             line = line.replace(char, f' {char} ')
-        print(line)
         line = line.split()
+        if codeToFunc and newDec.type == 'function':
+            if not '}' in line:
+                newDec.script.append(line)
+            elif len(line) > 1:
+                err.error(onLine, line, 'badClose')
+            else:
+                codeToFunc = False
         for term in line:
             if skip != 1:
-                print(term)
                 if term == '#':
                     skip = 1
                     continue
-                if term in terms and declaring == False:
+                if term in declares and declaring == False:
                     declare(term, onLine)
                 elif term == 'be' and newDec.type != 'function':
                     assigning = True
@@ -100,30 +89,40 @@ def run(code):
                         newDec.name = term
                     else:
                         if newDec.type == 'function':
-                            if term == '(':
-                                addParams = True
-                                nextParam = True
-                            elif term == ')':
-                                if not nextParam:
-                                    addParams = False
+                            if not codeToFunc:
+                                if term == '(':
+                                    addParams = True
+                                    nextParam = True
+                                elif term == ')':
+                                    if not nextParam:
+                                        addParams = False
+                                        nextParam = False
+                                    else:
+                                        err.error(onLine, line, 'badComma')
+                                elif term ==',':
+                                    nextParam = True
+                                elif term == '{':
+                                    if not nextParam:
+                                        codeToFunc = True
+                                    else:
+                                        err.error(onLine, line , 'badComma')
+                                elif term not in terms and addParams and nextParam:
                                     nextParam = False
-                                else:
-                                    error(onLine, line, 'badComma')
-                            elif term ==',':
-                                nextParam = True
-                            elif term == '{':
-                                if not nextParam:
-                                    pass
-                                else:
-                                    error(onLine, line , 'badComma')
-                            elif term not in terms and addParams and nextParam:
-                                nextParam = False
-                                newDec.params.append(term)
+                                    newDec.params.append(term)
                         elif assigning:
                             newDec.value = term
                         else:
-                            error(onLine, line, 'declaration')
+                            err.error(onLine, line, 'declaration')
+                elif term == 'hark':
+                    printing = True
                 else:
-                    error(onLine, line, 'notDefined', term)
+                    err.error(onLine, line, 'notDefined', term)
 
-    print(code, vars, funcs)
+    print('Variables:')
+    for var in vars:
+        print(f'(Declared on line {var.line}) - {var.type} {var.name} = {var.value}')
+    print('Functions:')
+    for func in funcs:
+        print(f'(Declared on line {func.line}) - {func.name}({", ".join(func.params)})')
+        for line in func.script:
+            print(f'  {line}')
